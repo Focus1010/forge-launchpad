@@ -1,0 +1,31 @@
+{
+  "name": "api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fastify/cors": "10.0.1",
+    "@fastify/websocket": "11.0.1",
+    "@forge/shared": "workspace:*",
+    "@solana/web3.js": "1.98.0",
+    "@upstash/redis": "1.34.3",
+    "dotenv": "16.4.7",
+    "fastify": "5.2.1",
+    "pinata": "1.9.0",
+    "viem": "2.22.8",
+    "zod": "3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.7",
+    "pino-pretty": "13.0.0",
+    "tsx": "4.19.2",
+    "typescript": "5.7.3"
+  }
+}
