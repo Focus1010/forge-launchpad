@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { config, hasRedis } from './config.js';
+import { getSimulator, simulatorRunning } from './services/simulator.js';
 import type { HealthReport } from './types/index.js';
 
 /**
@@ -33,11 +34,13 @@ export async function buildServer() {
       status: 'ok',
       uptimeSeconds: Math.floor((Date.now() - startedAt) / 1000),
       redis: hasRedis ? 'connected' : 'in-memory',
-      // Wired to the real simulation service in Stage 5.
-      simulation: 'stopped',
+      simulation: simulatorRunning() ? 'running' : 'stopped',
       timestamp: Date.now(),
     };
   });
+
+  // Start the simulation service so the feed is always alive.
+  getSimulator(app.log).start();
 
   return app;
 }
@@ -47,6 +50,7 @@ async function main() {
 
   const shutdown = async (signal: string) => {
     app.log.info(`Received ${signal}, shutting down.`);
+    getSimulator(app.log).stop();
     await app.close();
     process.exit(0);
   };

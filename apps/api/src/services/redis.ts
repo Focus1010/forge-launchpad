@@ -16,6 +16,8 @@ export interface RedisLike {
   zadd(key: string, member: { score: number; member: string }): Promise<void>;
   zrange<T = string>(key: string, min: number, max: number, byScore: boolean): Promise<T[]>;
   zcard(key: string): Promise<number>;
+  hset(key: string, field: string, value: unknown): Promise<void>;
+  hgetall<T = unknown>(key: string): Promise<Record<string, T>>;
   sadd(key: string, member: string): Promise<void>;
   smembers(key: string): Promise<string[]>;
   incrByFloat(key: string, amount: number): Promise<number>;
@@ -27,6 +29,7 @@ class MemoryRedis implements RedisLike {
   private store = new Map<string, unknown>();
   private sortedSets = new Map<string, Array<{ score: number; member: string }>>();
   private sets = new Map<string, Set<string>>();
+  private hashes = new Map<string, Map<string, unknown>>();
 
   async get<T = unknown>(key: string): Promise<T | null> {
     return (this.store.has(key) ? (this.store.get(key) as T) : null);
@@ -40,6 +43,7 @@ class MemoryRedis implements RedisLike {
     this.store.delete(key);
     this.sortedSets.delete(key);
     this.sets.delete(key);
+    this.hashes.delete(key);
   }
 
   async zadd(key: string, member: { score: number; member: string }): Promise<void> {
@@ -60,6 +64,18 @@ class MemoryRedis implements RedisLike {
 
   async zcard(key: string): Promise<number> {
     return (this.sortedSets.get(key) ?? []).length;
+  }
+
+  async hset(key: string, field: string, value: unknown): Promise<void> {
+    const hash = this.hashes.get(key) ?? new Map<string, unknown>();
+    hash.set(field, value);
+    this.hashes.set(key, hash);
+  }
+
+  async hgetall<T = unknown>(key: string): Promise<Record<string, T>> {
+    const hash = this.hashes.get(key);
+    if (!hash) return {};
+    return Object.fromEntries(hash.entries()) as Record<string, T>;
   }
 
   async sadd(key: string, member: string): Promise<void> {
@@ -85,6 +101,7 @@ class MemoryRedis implements RedisLike {
       ...this.store.keys(),
       ...this.sortedSets.keys(),
       ...this.sets.keys(),
+      ...this.hashes.keys(),
     ]);
     return Array.from(allKeys).filter((key) => key.startsWith(prefix));
   }
@@ -116,6 +133,14 @@ class UpstashRedis implements RedisLike {
 
   async zcard(key: string): Promise<number> {
     return this.client.zcard(key);
+  }
+
+  async hset(key: string, field: string, value: unknown): Promise<void> {
+    await this.client.hset(key, { [field]: value });
+  }
+
+  async hgetall<T = unknown>(key: string): Promise<Record<string, T>> {
+    return (await this.client.hgetall<Record<string, T>>(key)) ?? {};
   }
 
   async sadd(key: string, member: string): Promise<void> {
