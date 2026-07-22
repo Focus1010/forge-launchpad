@@ -3,15 +3,22 @@ import cors from '@fastify/cors';
 import websocket from '@fastify/websocket';
 import { config, hasRedis } from './config.js';
 import { getSimulator, simulatorRunning } from './services/simulator.js';
-import { feedWebsocketRoutes } from './routes/feed.js';
+import { getIndexer, indexerRunning } from './services/indexer.js';
+import { feedWebsocketRoutes, feedHttpRoutes } from './routes/feed.js';
+import { tokenRoutes } from './routes/tokens.js';
+import { launchRoutes } from './routes/launch.js';
+import { tradeRoutes } from './routes/trades.js';
+import { profileRoutes } from './routes/profile.js';
+import { simulationRoutes } from './routes/simulation.js';
+import { bridgeRoutes } from './routes/bridge.js';
 import type { HealthReport } from './types/index.js';
 
 /**
  * Fastify server entry point.
  *
- * Stage 4 wires up the instance, CORS, logging, a health check, and graceful
- * shutdown. Later stages register the WebSocket plugin, the simulation service,
- * the indexer, and the route modules.
+ * Wires the instance, CORS, logging, the WebSocket plugin, all route modules,
+ * the simulation service, the onchain indexer, health check, and graceful
+ * shutdown.
  */
 export async function buildServer() {
   const app = Fastify({
@@ -31,7 +38,15 @@ export async function buildServer() {
 
   await app.register(websocket);
 
+  // WebSocket and HTTP routes.
   await app.register(feedWebsocketRoutes);
+  await app.register(feedHttpRoutes);
+  await app.register(tokenRoutes);
+  await app.register(launchRoutes);
+  await app.register(tradeRoutes);
+  await app.register(profileRoutes);
+  await app.register(simulationRoutes);
+  await app.register(bridgeRoutes);
 
   const startedAt = Date.now();
 
@@ -41,12 +56,14 @@ export async function buildServer() {
       uptimeSeconds: Math.floor((Date.now() - startedAt) / 1000),
       redis: hasRedis ? 'connected' : 'in-memory',
       simulation: simulatorRunning() ? 'running' : 'stopped',
+      indexer: indexerRunning() ? 'running' : 'stopped',
       timestamp: Date.now(),
     };
   });
 
-  // Start the simulation service so the feed is always alive.
+  // Start the background services so the feed is always alive.
   getSimulator(app.log).start();
+  getIndexer(app.log).start();
 
   return app;
 }
@@ -57,6 +74,7 @@ async function main() {
   const shutdown = async (signal: string) => {
     app.log.info(`Received ${signal}, shutting down.`);
     getSimulator(app.log).stop();
+    getIndexer(app.log).stop();
     await app.close();
     process.exit(0);
   };

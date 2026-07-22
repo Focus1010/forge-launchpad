@@ -31,5 +31,6 @@ export interface HealthReport {
   uptimeSeconds: number;
   redis: 'connected' | 'in-memory';
   simulation: 'running' | 'stopped';
+  indexer: 'running' | 'stopped';
   timestamp: number;
 }

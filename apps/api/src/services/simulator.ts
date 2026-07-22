@@ -73,6 +73,11 @@ export class Simulator {
     this.log.info('[simulator] stopped');
   }
 
+  /** Run a single tick on demand, used by the internal simulation route. */
+  async tickOnce(): Promise<void> {
+    await this.tick();
+  }
+
   /** Ensure the feed is not empty on first boot by launching a few tokens. */
   private async seedInitialTokens(): Promise<void> {
     const existing = await getAllTokens();

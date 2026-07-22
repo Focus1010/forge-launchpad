@@ -90,4 +90,33 @@ export async function getVolume(tokenAddress: string): Promise<number> {
   return typeof value === 'number' ? value : Number(value ?? 0);
 }
 
+/** Read every token address a creator has launched. */
+export async function getCreatorTokens(creator: string): Promise<ForgeToken[]> {
+  const addresses = await redis.smembers(keys.tokensByCreator(creator));
+  const tokens = await Promise.all(addresses.map((address) => getToken(address)));
+  return tokens
+    .filter((token): token is ForgeToken => token !== null)
+    .sort((a, b) => b.launchedAt - a.launchedAt);
+}
+
+/** Make `follower` follow `target`. Stored in Redis, not onchain. */
+export async function follow(follower: string, target: string): Promise<void> {
+  await redis.sadd(keys.follows(follower), target);
+  await redis.sadd(keys.followers(target), follower);
+}
+
+/** Read follow counts for a wallet. */
+export async function getFollowStats(wallet: string): Promise<{ following: number; followers: number }> {
+  const [following, followers] = await Promise.all([
+    redis.smembers(keys.follows(wallet)),
+    redis.smembers(keys.followers(wallet)),
+  ]);
+  return { following: following.length, followers: followers.length };
+}
+
+/** Store a bridge notification email. */
+export async function saveBridgeEmail(email: string): Promise<void> {
+  await redis.sadd(keys.bridgeEmails, email.toLowerCase());
+}
+
 export const storeLimits = { FEED_MAX, TRADES_MAX };
