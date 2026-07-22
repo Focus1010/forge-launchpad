@@ -1,7 +1,9 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import websocket from '@fastify/websocket';
 import { config, hasRedis } from './config.js';
 import { getSimulator, simulatorRunning } from './services/simulator.js';
+import { feedWebsocketRoutes } from './routes/feed.js';
 import type { HealthReport } from './types/index.js';
 
 /**
@@ -26,6 +28,10 @@ export async function buildServer() {
     origin: config.CORS_ORIGIN.split(',').map((entry) => entry.trim()),
     methods: ['GET', 'POST', 'OPTIONS'],
   });
+
+  await app.register(websocket);
+
+  await app.register(feedWebsocketRoutes);
 
   const startedAt = Date.now();
 
