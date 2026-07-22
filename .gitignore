@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# Contracts (EVM / Foundry)
+contracts/evm/out/
+contracts/evm/cache/
+contracts/evm/broadcast/
+contracts/evm/lib/
+
+# Contracts (Solana / Anchor)
+contracts/solana/target/
+contracts/solana/.anchor/
+contracts/solana/test-ledger/
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Agent tooling
+.claude/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Vercel
+.vercel
+
+# Coverage
+coverage/

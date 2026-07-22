@@ -1,0 +1,23 @@
+{
+  "name": "forge",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Forge is a multi-chain token launchpad on Base Sepolia and Solana Devnet with a native social feed, sponsored gas, and simulated market activity.",
+  "packageManager": "pnpm@10.29.3",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev:web": "pnpm --filter web dev",
+    "dev:api": "pnpm --filter api dev",
+    "dev": "concurrently \"pnpm dev:web\" \"pnpm dev:api\"",
+    "build": "pnpm --filter web build && pnpm --filter api build",
+    "build:web": "pnpm --filter web build",
+    "build:api": "pnpm --filter api build",
+    "typecheck": "pnpm --filter web typecheck && pnpm --filter api typecheck",
+    "lint": "pnpm --filter web lint"
+  },
+  "devDependencies": {
+    "concurrently": "9.1.2"
+  }
+}
